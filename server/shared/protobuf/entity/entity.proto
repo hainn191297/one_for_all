@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package common;
+package entity;
 
 // Specify the Go package name
-option go_package = "./common";
+option go_package = "./entity";
 
 enum EntityType {
     ENTITY_TYPE_NONE = 0;  // No entity type specified. enum always has first entity type = 0

@@ -10,6 +10,7 @@ SERVICE_DIR=$(ROOT_DIR)/$(SERVICE)
 LOGS_DIR=$(ROOT_DIR)/logs
 SCHEMA_DIR=$(ROOT_DIR)/schema
 API_DIR=$(SHARED_DIR)/api
+# COMMON_DIR=$(ROOT_DIR)/common
 
 # rpc model
 PROTO_MODEL_DIR=$(SHARED_DIR)/protobuf
@@ -30,3 +31,22 @@ dependency-init:
 # gen api
 gen-account-service:
 	goctl api go -api $(API_DIR)/account/account.api -dir $(ACCOUNT_API_DIR) -style gozero
+	@rm -rf $(ACCOUNT_API_DIR)/etc
+
+gen-account-rpc:
+	goctl rpc protoc --proto_path=$(PROTO_MODEL_DIR) $(PROTO_MODEL_DIR)/account/account.proto --go_out=$(ACCOUNT_RPC_PB_DIR) --go-grpc_out=$(ACCOUNT_RPC_PB_DIR) --zrpc_out=$(ACCOUNT_RPC_DIR) -style gozero 
+	@rm -rf $(ACCOUNT_RPC_DIR)/etc
+	@rm -rf $(ACCOUNT_RPC_DIR)/accountclient
+
+# gen config for multiple services
+gen-entity-config:
+	protoc --proto_path=$(PROTO_MODEL_DIR) --go_out=$(ROOT_DIR)/common --go-grpc_out=$(ROOT_DIR)/common $(PROTO_MODEL_DIR)/entity/entity.proto
+
+
+
+# local
+run-account:
+	go run $(ACCOUNT_API_DIR)/account.go -f etc/account/account-api.yaml
+
+run-account-rpc:
+	go run $(ACCOUNT_RPC_DIR)/account.go -f etc/account/account-rpc.yaml

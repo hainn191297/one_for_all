@@ -2,11 +2,11 @@
 package types
 
 type GetUserReq struct {
-	Username string `path:"username"` //	user name
+	Username string `path:"username"` // user name
 }
 
 type GetUserRes struct {
-	Result Result `json:"result"` // 	response result
+	Result Result `json:"result"` //  response result
 	User   User   `json:"user"`   //  info user
 }
 
@@ -14,19 +14,19 @@ type GetUsersReq struct {
 }
 
 type GetUsersRes struct {
-	Result Result `json:"result"` // 	response result
+	Result Result `json:"result"` //  response result
 	Users  []User `json:"users"`  //  list info user
 }
 
 type LoginReq struct {
-	Username string `form:"username"` //	username
-	Password string `form:"password"` // 	password
+	Username string `form:"username"` //  username
+	Password string `form:"password"` //  password
 }
 
 type LoginRes struct {
-	Result         Result `json:"result"`         // 	response result
-	Token          string `json:"authToken"`      // 	jwttoken for api
-	BaseStorageUrl string `json:"baseStorageUrl"` // 	BaseStorageUrl
+	Result         Result `json:"result"`         //          response result
+	Token          string `json:"authToken"`      //       jwttoken for api
+	BaseStorageUrl string `json:"baseStorageUrl"` //  BaseStorageUrl
 	UserInfo       User   `json:"user"`           //  info user
 }
 
@@ -53,8 +53,8 @@ type UpdateDeviceTokenReq struct {
 }
 
 type UpdateDeviceTokenRes struct {
-	Code    int    `json:"code"`    //	Result code: 0 is success. Otherwise, getting an error
-	Message string `json:"message"` //	Result message: detail response code
+	Code    int    `json:"code"`    //    Result code: 0 is success. Otherwise, getting an error
+	Message string `json:"message"` // Result message: detail response code
 }
 
 type User struct {
