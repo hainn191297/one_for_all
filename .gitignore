@@ -1,0 +1,43 @@
+#### fe
+
+# Node.js dependencies
+front-end/node_modules/
+
+# Production build files
+front-enddist/
+
+# Logs
+front-end/npm-debug.log*
+front-end/yarn-debug.log*
+front-end/yarn-error.log*
+
+# IDE and editor settings
+front-end/.vscode/
+front-end/.idea/
+
+# Local environment variables
+front-end/.env
+front-end/.env.local
+front-end/.env.*.local
+
+# Optional npm cache directory
+front-end/.npm
+
+# Testing related files
+front-end/coverage/
+
+# MacOS specific files
+front-end/.DS_Store
+
+# ESLint and Prettier cache
+front-end/eslintcache
+
+# TypeScript specific (if using TypeScript)
+front-end/*.tsbuildinfo
+
+# Cypress end-to-end testing specific
+front-end/cypress/screenshots/
+front-end/cypress/videos/
+
+
+####### server
