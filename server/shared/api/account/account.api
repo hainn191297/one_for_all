@@ -1,0 +1,101 @@
+info (
+	title:   "account server"
+	desc:    ""
+	author:  "HaiNN"
+	email:   "hai.nn191297@gmail.com"
+	version: "v1"
+)
+
+import "model.api"
+
+type (
+	RegisterReq {
+		Role        int    `json:"role,optional"` // Role user
+		UserName    string `json:"userName,optional"` // User name
+		FullName    string `json:"fullName,optional"` // Full name
+		Email       string `json:"email,optional"` // Email user
+		Gender      int    `json:"gender,optional"` // Gender user
+		Avatar      string `json:"avatar,optional"` // Avatar user
+		PhoneNumber string `json:"phoneNumber,optional"` // Phone number of user
+		CreatedAt   int64  `json:"createdAt,optional"` // Time user created
+		UpdatedAt   int64  `json:"updatedAt,optional"` // Time user updated
+	}
+)
+
+type (
+	// request Login API
+	// return jwt auth-token use for other API
+	LoginReq {
+		Username string `form:"username"` //  username
+		Password string `form:"password"` //  password
+	}
+	LoginRes {
+		Result         Result `json:"result"` //          response result
+		Token          string `json:"authToken"` //       jwttoken for api
+		BaseStorageUrl string `json:"baseStorageUrl"` //  BaseStorageUrl
+		UserInfo       User   `json:"user"` //  info user
+	}
+)
+
+type (
+	GetUserReq {
+		Username string `path:"username"` // user name
+	}
+	GetUserRes {
+		Result Result `json:"result"` //  response result
+		User   User   `json:"user"` //  info user
+	}
+)
+
+type (
+	GetUsersReq  {}
+	GetUsersRes {
+		Result Result `json:"result"` //  response result
+		Users  []User `json:"users"` //  list info user
+	}
+)
+
+////////////////////////////////////////////////////////
+type (
+	UpdateDeviceTokenReq {
+		UserID int64  `header:"User-Id"`
+		Token  string `json:"token"`
+	}
+	UpdateDeviceTokenRes {
+		Code    int    `json:"code"` //    Result code: 0 is success. Otherwise, getting an error
+		Message string `json:"message"` // Result message: detail response code
+	}
+)
+
+@server (
+	prefix: account/v1
+	group:  user
+)
+service account-api {
+	@doc (
+		summary: "Login"
+	)
+	@handler LoginHandler
+	post /user/login (LoginReq) returns (LoginRes)
+}
+
+@server (
+	prefix:     account/v1
+	group:      user
+	jwt:        Auth
+	middleware: UserTokenMiddleware
+)
+service account-api {
+	@doc (
+		summary: "Get user information"
+	)
+	@handler GetUser
+	get /user/:username (GetUserReq) returns (GetUserRes)
+
+	@doc (
+		summary: "Get list user"
+	)
+	@handler GetUsers
+	get /user (GetUsersReq) returns (GetUsersRes)
+}
+

@@ -1,0 +1,230 @@
+version: "3.8"
+
+x-volumes-driver: &volumes-driver
+  driver: local
+  driver_opts: &opts-volumes
+    type: none
+    o: bind
+    device: ""
+
+services:
+  # Jaeger for tracing
+  jaeger:
+    image: jaegertracing/all-in-one:1.18
+    container_name: jaeger
+    restart: always
+    ports:
+      - "5775:5775/udp"
+      - "6831:6831/udp"
+      - "6832:6832/udp"
+      - "5778:5778"
+      - "16686:16686"
+      - "14268:14268"
+      - "9411:9411"
+    environment:
+      - SPAN_STORAGE_TYPE=elasticsearch
+      - ES_SERVER_URLS=http://elasticsearch:9200
+      - ES_TAGS_AS_FIELDS_ALL=true
+      - LOG_LEVEL=debug
+    networks:
+      - go_zero_net
+
+  # prometheus — Prometheus for monitoring
+  prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: prometheus
+    environment:
+      # Time zone Ho Chi Minh 
+      TZ: Asia/Ho_Chi_Minh
+    volumes:
+      - ./deploy/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./data/prometheus/data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+    restart: always
+    user: root
+    ports:
+      - 9090:9090
+    networks:
+      - go_zero_net
+
+  # Grafana to view Prometheus monitoring data
+  grafana:
+    image: grafana/grafana:8.0.6
+    container_name: grafana
+    hostname: grafana
+    user: root
+    environment:
+      # Time zone Ho Chi Minh 
+      TZ: Asia/Ho_Chi_Minh
+    restart: always
+    volumes:
+        - ./data/grafana/data:/var/lib/grafana
+    ports:
+        - "3000:3000"
+    networks:
+        - go_zero_net
+
+  # Kafka for collecting business logs and storing Prometheus monitoring data
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.13.4
+    container_name: elasticsearch
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - TZ=Asia/Ho_Chi_Minh
+    volumes:
+      - elastic-data:/usr/share/elasticsearch/data
+    restart: always
+    ports:
+    - 9200:9200
+    - 9300:9300
+    networks:
+      - go_zero_net
+
+  # Kibana to view Elasticsearch data
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.13.4
+    container_name: kibana
+    environment:
+      - elasticsearch.hosts=http://elasticsearch:9200
+      - TZ=Asia/Ho_Chi_Minh
+    restart: always
+    networks:
+      - go_zero_net
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+    
+  # Collect business data
+  filebeat:
+    image: elastic/filebeat:7.13.4
+    container_name: filebeat
+    environment:
+      # Time zone Ho Chi Minh 
+      TZ: Asia/Ho_Chi_Minh
+    user: root
+    restart: always
+    entrypoint: "filebeat -e -strict.perms=false"  # Solving the configuration file permissions
+    volumes:
+      - ./deploy/filebeat/conf/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - /var/lib/docker/containers:/var/lib/docker/containers
+    networks:
+      - go_zero_net
+    depends_on:
+      - kafka
+
+  # kafka
+  kafka-ui:
+    image: redpandadata/console:latest
+    container_name: kafka-ui
+    hostname: kafka-ui
+    depends_on:
+      - kafka
+    ports:
+      - 8081:8080
+    environment:
+      KAFKA_BROKERS : kafka:9092
+    networks:
+      - go_zero_net
+  
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: kafka
+    hostname: kafka
+    ports:
+      - 9092:9092
+      - 29092:29092
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: 'CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT'
+      KAFKA_ADVERTISED_LISTENERS: 'PLAINTEXT://kafka:29092,PLAINTEXT_HOST://kafka:9092'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_JMX_PORT: 9101
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_PROCESS_ROLES: 'broker,controller'
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1@kafka:29093'
+      KAFKA_LISTENERS: 'PLAINTEXT://kafka:29092,CONTROLLER://kafka:29093,PLAINTEXT_HOST://0.0.0.0:9092'
+      KAFKA_INTER_BROKER_LISTENER_NAME: 'PLAINTEXT'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      KAFKA_LOG_DIRS: '/tmp/kraft-combined-logs'
+      CLUSTER_ID: 'nPJRK2uxTdqQmfKXvq2Wew'  
+    volumes:
+      - ./data/kafka/logs:/tmp/kraft-combined-logs
+      - ./data/kafka/data:/var/lib/kafka/data
+    networks:
+      - go_zero_net
+
+  mysql:
+    image: mysql:8.0.30
+    cap_add:
+      - SYS_NICE
+    container_name: mysql
+    hostname: mysql
+    ports:
+      - 33060:3306
+    restart: unless-stopped
+    volumes:
+      - ./data/mysql/data:/var/lib/mysql
+      - ./data/mysql/docker-entrypoint-initdb.d:/docker-entrypoint-initdb.d
+      - ./data/mysql/conf.d:/etc/mysql/conf.d
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
+      - MYSQL_ROOT_PASSWORD=pass
+      - MYSQL_DATABASE=go_zero
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=pass
+    networks:
+      - go_zero_net
+
+  scylla:
+    container_name: scylla
+    image: scylladb/scylla
+    restart: always
+    command: --seeds=scylla --smp 1 --memory 2G --overprovisioned 1 --api-address 0.0.0.0
+    volumes:
+      - "./deploy/scylla/scylla.yaml:/etc/scylla/scylla.yaml"
+      - "./deploy/scylla/cassandra-rackdc.properties.dc1:/etc/scylla/cassandra-rackdc.properties"
+      - ./data/scylla/data:/var/lib/scylla
+      # - "./scylla/mutant-data.txt:/mutant-data.txt" # init schema
+    ports:
+      - 9043:9042
+    networks:
+      - go_zero_net
+  
+  # Redis container
+  redis:
+    image: redis:alpine3.16
+    container_name: redis
+    hostname: redis
+    restart: always
+    ports:
+      - 6379:6379
+    command: redis-server --save 20 1 --loglevel debug --logfile "" --requirepass pass
+    volumes:
+      - redis-data:/data
+      # - redis-log:/var/log
+    networks:
+      - go_zero_net
+
+networks:
+  go_zero_net:
+    driver: bridge
+
+volumes:
+  redis-data:
+    <<: *volumes-driver
+    driver_opts: 
+      <<: *opts-volumes
+      device: ${PWD}/data/redis/data
+
+  elastic-data:
+    <<: *volumes-driver
+    driver_opts: 
+      <<: *opts-volumes
+      device: ${PWD}/data/elasticsearch

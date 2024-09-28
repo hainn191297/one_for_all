@@ -1,0 +1,32 @@
+info(
+	title: "model"
+	desc: ""
+	author: "HaiNN"
+	email: "hai.nn191297@gmail.com"
+	version: "v1"
+)
+
+
+type (
+	Result {
+		Code    int    `json:"code"`    //	Result code: 0 is success. Otherwise, getting an error
+		Message string `json:"message"` //	Result message: detail response code
+	}
+)
+
+// Info user
+type (
+	User {
+		ID          int64  `json:"id,optional"`
+		Role        int    `json:"role,optional"`        // Role user
+		UserID      int64  `json:"userId,optional"`      // ID of user
+		UserName    string `json:"userName,optional"`    // User name
+		FullName    string `json:"fullName,optional"`    // Full name
+		Email       string `json:"email,optional"`       // Email user
+		Gender      int    `json:"gender,optional"`      // Gender user
+		Avatar      string `json:"avatar,optional"`      // Avatar user
+		PhoneNumber string `json:"phoneNumber,optional"` // Phone number of user
+		CreatedAt   int64  `json:"createdAt,optional"`   // Time user created
+		UpdatedAt   int64  `json:"updatedAt,optional"`   // Time user updated
+	}
+)

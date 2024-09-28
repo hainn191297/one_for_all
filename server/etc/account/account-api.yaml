@@ -1,0 +1,36 @@
+Name: account-api
+Host: 0.0.0.0
+Port: 8000 # 8000 -> 8099
+Auth:
+  AccessSecret: xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+  AccessExpire: 604800
+MaxBytes: 1073741824
+
+DataSource: root:12345@tcp(localhost:3306)/account
+BaseStorageUrl: localhost:7480/storage/
+
+Prometheus:
+  Host: 10.84.5.90
+  Port: 4000
+  Path: /metrics
+
+Telemetry:
+  Name: account-api
+  Endpoint: localhost:14268/api/traces
+  Sampler: 1.0
+  Batcher: jaeger
+
+Log:
+  ServiceName: account-api
+  Mode: file #options=[console,file,volume]
+  Level: info #options=[info,error,severe]
+  Path: logs #options=[info,error,severe]
+
+Cache:
+  - Host: localhost:6379
+    Pass: pass
+
+Redis:
+  Host: localhost:6379
+  Pass: pass
+  Type: node

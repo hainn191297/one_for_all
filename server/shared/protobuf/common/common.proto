@@ -1,0 +1,13 @@
+syntax = "proto3";
+
+package common;
+
+// Specify the Go package name
+option go_package = "./common";
+
+enum EntityType {
+    ENTITY_TYPE_NONE = 0;  // No entity type specified. enum always has first entity type = 0
+    ENTITY_TYPE_OTP = 1;
+	ENTITY_TYPE_USER = 2;
+	ENTITY_TYPE_SESSION = 3;
+}

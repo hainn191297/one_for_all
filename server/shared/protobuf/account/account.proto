@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+option go_package = "./account";
+
+package account;
+
+
+//model
+message User {
+  int64 userId = 1;
+}
+
+
+message GetUserByNameReq {
+    string userName = 1;
+}
+
+message GetUserByNameRes {
+    User user = 1;
+}
+
+//service
+service account {
+  rpc GetUserByName(GetUserByNameReq) returns(GetUserByNameRes);
+}
