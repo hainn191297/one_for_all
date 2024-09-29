@@ -1,20 +1,39 @@
-<script setup>
-import { Nav, Alert } from '@/components';
-import { useAuthStore } from '@/stores';
-
-const authStore = useAuthStore();
+<script setup lang="ts">
+import { RouterLink, RouterView } from 'vue-router';
 </script>
 
 <template>
-    <div class="app-container" :class="authStore.user && 'bg-light'">
-        <Nav />
-        <Alert />
-        <div class="container pt-4 pb-4">
-            <router-view />
-        </div>
-    </div>
+  <div>
+    <header>
+      <img alt="Vue logo" class="logo" />
+      <nav>
+        <RouterLink to="/">Login</RouterLink>
+        <RouterLink to="/register">Register</RouterLink>
+        <RouterLink to="/dashboard">Dashboard</RouterLink>
+      </nav>
+    </header>
+
+    <RouterView /> <!-- This is where routed components will be displayed -->
+  </div>
 </template>
 
-<style>
-@import '@/assets/base.css';
+<style scoped>
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+nav {
+  margin-top: 1rem;
+}
+
+nav a {
+  margin: 0 10px;
+  text-decoration: none;
+}
+
+.logo {
+  display: block;
+  margin: 0 auto;
+}
 </style>
